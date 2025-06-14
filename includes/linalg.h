@@ -38,6 +38,7 @@ typedef struct m4 {
 float v4dot(v4*, v4*);
 float v3dot(v3*, v3*);
 v3* v3add(v3*, v3*);
+v3* v3sub(v3*, v3*);
 v3* v3negate(v3*);
 v3* v3cross(v3*, v3*);
 m4* perspective(float, float, float, float);

@@ -20,6 +20,15 @@ v3* v3add(v3*a, v3* b) {
 }
 
 // resultant vector needs to be freed
+v3* v3sub(v3*a, v3* b) {
+    v3* ptr = malloc(sizeof(v3));
+    ptr->x = a->x - b->x;
+    ptr->y = a->y - b->y;
+    ptr->z = a->z - b->z;
+    return ptr;
+}
+
+// resultant vector needs to be freed
 v3* v3negate(v3* a) {
     v3* ptr = malloc(sizeof(v3));
     ptr->x = -a->x;

@@ -6,22 +6,23 @@
 #include <math.h>
 #include <ncurses.h>
 #include <time.h>
+#include <string.h>
 
 #include "linalg.h"
 
 
-#define SCALE (5)
+#define SCALE (7)
 #define VERTICIES (8)
 #define TRIANGLES (12)
-#define FOV (1.0)
+#define FOV (1)
 #define ASPECT (0.5)
 #define GRADLEN (69)
 
 #define FPS (60)
+#define YPOS (1.7)
+#define XPOS (4)
+#define YSPEED (1.5)
+#define ZSPEED (2)
 #define RSPEED (1)
-#define YPOS (2)
-#define XPOS (5)
-#define YSPEED (1)
-#define ZSPEED (5)
 
 #endif // _CUBE

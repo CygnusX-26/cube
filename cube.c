@@ -3,18 +3,18 @@
 #include <math.h>
 #include <ncurses.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "includes/cube.h"
 #include "includes/linalg.h"
 
 v3 camera_pos = {0, 0, -2.5};
 v3 camera_target = {0, 0, 0};
-v3 camera_up = {0, 1, 0};
+v3 camera_up = {2, 0, 2};
 
-v3 light_dir = {-1, 0, 100};
+v3 light_dir = {1, 1, 1};
 
-//char* gradient = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'.";
-char* gradient = "$Zt\\<,]*.-B%L";
+char* gradient = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'.";
 
 v3 cube_verts[VERTICIES] = {
     {1, -1, -1},
@@ -28,7 +28,6 @@ v3 cube_verts[VERTICIES] = {
 };
 
 v2 cube_verts_screen[VERTICIES] = {0};
-float cube_verts_depth[VERTICIES] = {0};
 
 // specifies index in cube_verts in which triangles are connected
 v3 cube_triangles[TRIANGLES] = {
@@ -46,6 +45,9 @@ v3 cube_triangles[TRIANGLES] = {
     {0, 3, 2},
 };
 
+v3 vertex_normals[VERTICIES] = {0};
+v3 transformed_normals[VERTICIES] = {0};
+
 void init() {
     initscr();
     noecho();
@@ -57,14 +59,39 @@ float edge_function(v2 a, v2 b, v2 c) {
 }
 
 char char_from_intensity(float intensity) {
-    return gradient[(int) intensity];
+    return gradient[(int) (intensity * (strlen(gradient) - 1))];
 }
 
 
 int main() {
-    v3* neg_cam_pos = v3negate(&camera_pos);
 
-    v3* camZ = v3add(&camera_target, neg_cam_pos);
+    //setup normals for each vertex
+    for (int i = 0; i < TRIANGLES; i++) {
+        int a = cube_triangles[i].x;
+        int b = cube_triangles[i].y;
+        int c = cube_triangles[i].z;
+
+        v3* p0 = &cube_verts[a];
+        v3* p1 = &cube_verts[b];
+        v3* p2 = &cube_verts[c];
+
+        v3* e1 = v3sub(p1, p0);
+        v3* e2 = v3sub(p2, p0);
+        v3* normal = v3cross(e1, e2);
+        v3normalize(normal);
+
+        v3* norm = v3add(&vertex_normals[a], normal);
+        vertex_normals[a] = *norm;
+        norm = v3add(&vertex_normals[b], normal);
+        vertex_normals[b] = *norm;
+        norm = v3add(&vertex_normals[c], normal);
+        vertex_normals[c] = *norm;
+
+        free(e1); free(e2); free(normal); free(norm);
+        e1 = NULL; e2 = NULL; normal = NULL; norm = NULL;
+    }
+
+    v3* camZ = v3sub(&camera_target, &camera_pos);
     v3normalize(camZ);
 
     v3* camX = v3cross(&camera_up, camZ);
@@ -78,8 +105,8 @@ int main() {
     viewMat->z = (v4) {camX->z, camY->z, camZ->z, 0};
     viewMat->w = (v4) {-v3dot(camX, &camera_pos), -v3dot(camY, &camera_pos), -v3dot(camZ, &camera_pos), 1};
 
-    free(camX); free(camY); free(camZ); free(neg_cam_pos);
-    camX = NULL; camY = NULL; camZ = NULL; neg_cam_pos = NULL;
+    free(camX); free(camY); free(camZ);
+    camX = NULL; camY = NULL; camZ = NULL;
 
     m4* projMat = perspective(FOV, ASPECT, 0, 50);
     m4* modelMat = NULL;
@@ -87,6 +114,7 @@ int main() {
     m4* vpMat = NULL;
     m4* vpmMat = NULL;
     v4* projVec = NULL;
+    v4* normVec = NULL;
 
     init();
     float rad = 0;
@@ -96,9 +124,9 @@ int main() {
         // funny spinnning, could change in future
         modelMat = m4m4matrix_multiply(
             &(m4) {
-            {cos(rad), 0, sin(rad), 0},
+            {cos(rad*YSPEED), 0, sin(rad*YSPEED), 0},
             {0, 1, 0, 0},
-            {-sin(rad), 0, cos(rad), 0},
+            {-sin(rad*YSPEED), 0, cos(rad*YSPEED), 0},
             {0, 0, 0, 1}
             },
             &(m4) {
@@ -115,25 +143,33 @@ int main() {
             vpmMat = m4m4matrix_multiply(vpMat, modelMat);
             projVec = m4v4matrix_multiply(vpmMat, &(v4){cube_verts[i].x, cube_verts[i].y, cube_verts[i].z, 1});
             cube_verts_screen[i] = (v2) {SCALE * (projVec->x / projVec->z + XPOS), SCALE * (projVec->y / projVec->z + YPOS)};
-            cube_verts_depth[i] = projVec->z;
+            v4 n = { vertex_normals[i].x, vertex_normals[i].y, vertex_normals[i].z, 0 };
+            normVec = m4v4matrix_multiply(modelMat, &n);
+            transformed_normals[i] = (v3) {normVec->x, normVec->y, normVec->z};
+            v3normalize(&transformed_normals[i]);
             // Just put a dot on the screen where the points should be
-            // mvprintw(SCALE * (projVec->y / projVec->z + YPOS), SCALE * (projVec->x / projVec->z + XPOS), ".");
+            //mvprintw(SCALE * (projVec->y / projVec->z + YPOS), SCALE * (projVec->x / projVec->z + XPOS), ".");
 
-            free(vpMat); free(vpmMat); free(projVec);
-            vpMat = NULL; vpmMat = NULL; projVec = NULL;
+            free(vpMat); free(vpmMat); free(projVec); free(normVec);
+            vpMat = NULL; vpmMat = NULL; projVec = NULL; normVec = NULL;
         }
         
         for (int i = 0; i < TRIANGLES; i++) {
-            v2 v0 = cube_verts_screen[(int)cube_triangles[i].x];
-            v2 v1 = cube_verts_screen[(int)cube_triangles[i].y];
-            v2 v2_ = cube_verts_screen[(int)cube_triangles[i].z];
+            int a = (int)cube_triangles[i].x;
+            int b = (int)cube_triangles[i].y;
+            int c = (int)cube_triangles[i].z;
 
-            float z0 = cube_verts_depth[(int)cube_triangles[i].x];
-            float z1 = cube_verts_depth[(int)cube_triangles[i].y];
-            float z2 = cube_verts_depth[(int)cube_triangles[i].z];
+            v2 v0 = cube_verts_screen[a];
+            v2 v1 = cube_verts_screen[b];
+            v2 v2_ = cube_verts_screen[c];
 
+            v3* c0 = &cube_verts[a];
+            v3* c1 = &cube_verts[b];
+            v3* c2 = &cube_verts[c];
 
-            char c = char_from_intensity(i);
+            v3 n0 = transformed_normals[a];
+            v3 n1 = transformed_normals[b];
+            v3 n2 = transformed_normals[c];
 
             int minX = (int)floorf(fminf(fminf(v0.x, v1.x), v2_.x));
             int maxX = (int)ceilf(fmaxf(fmaxf(v0.x, v1.x), v2_.x));
@@ -148,7 +184,24 @@ int main() {
                     float w1 = edge_function(v2_, v0, point);
                     float w2 = edge_function(v0, v1, point);
                     if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
-                            mvaddch(y, x, c);
+                        float sum = w0 + w1 + w2;
+                        if (sum == 0) continue;
+                        v3 interp_normal = {
+                            (n0.x * w0 + n1.x * w1 + n2.x * w2) / sum,
+                            (n0.y * w0 + n1.y * w1 + n2.y * w2) / sum,
+                            (n0.z * w0 + n1.z * w1 + n2.z * w2) / sum,
+                        };
+                        v3normalize(&interp_normal);
+
+                        v3* light = v3negate(&light_dir);
+                        v3normalize(light);
+                        float intensity = fmaxf(0.0f, v3dot(&interp_normal, light));
+
+                        free(light);
+                        light = NULL;
+
+                        char chr = char_from_intensity(intensity);
+                        mvaddch(y, x, chr);
                     }
                 }
             }
@@ -159,12 +212,12 @@ int main() {
         modelMat = NULL;
         refresh();
         napms(1.0 / FPS);
-        if (rad > 6.28) {
-            rad = 0;
-        }
-        else {
-            rad += 0.0001 * RSPEED;
-        }
+        // if (rad >= 6.2831852) {
+        //     rad = 0;
+        // }
+        // else {
+        rad += 0.0001 * RSPEED;
+        // }
     }
 
     free(viewMat);
