@@ -82,8 +82,10 @@ int main() {
 
         v3* norm = v3add(&vertex_normals[a], normal);
         vertex_normals[a] = *norm;
+        free(norm);
         norm = v3add(&vertex_normals[b], normal);
         vertex_normals[b] = *norm;
+        free(norm);
         norm = v3add(&vertex_normals[c], normal);
         vertex_normals[c] = *norm;
 
@@ -137,7 +139,6 @@ int main() {
             }
         );
 
-        // project from model to 2d screen coords
         for (int i = 0; i < VERTICIES; i++) {
             vpMat = m4m4matrix_multiply(projMat, viewMat);
             vpmMat = m4m4matrix_multiply(vpMat, modelMat);
@@ -147,7 +148,7 @@ int main() {
             normVec = m4v4matrix_multiply(modelMat, &n);
             transformed_normals[i] = (v3) {normVec->x, normVec->y, normVec->z};
             v3normalize(&transformed_normals[i]);
-            // Just put a dot on the screen where the points should be
+
             //mvprintw(SCALE * (projVec->y / projVec->z + YPOS), SCALE * (projVec->x / projVec->z + XPOS), ".");
 
             free(vpMat); free(vpmMat); free(projVec); free(normVec);

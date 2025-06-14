@@ -4,9 +4,9 @@
 
 [ncurses](https://invisible-island.net/ncurses/)
 
-## Build
+## Run
 
-`make`
+`make && ./cube`
 
 ## Customization
 
