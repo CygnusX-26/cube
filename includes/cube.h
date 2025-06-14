@@ -9,10 +9,19 @@
 
 #include "linalg.h"
 
-#define ROTSPEED (5000)
-#define SCALE (3)
+
+#define SCALE (5)
 #define VERTICIES (8)
-#define FOV (1.025)
+#define TRIANGLES (12)
+#define FOV (1.0)
 #define ASPECT (0.5)
+#define GRADLEN (69)
+
+#define FPS (60)
+#define RSPEED (1)
+#define YPOS (2)
+#define XPOS (5)
+#define YSPEED (1)
+#define ZSPEED (5)
 
 #endif // _CUBE

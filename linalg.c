@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "includes/cube.h"
+#include "includes/linalg.h"
 
 float v4dot(v4* x, v4* y) {
     return x->x * y->x + x->y * y->y + x->z * y->z + x->w * y->w;

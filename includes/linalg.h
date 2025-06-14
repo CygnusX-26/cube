@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include <math.h>
 
+typedef struct v2 {
+    float x;
+    float y;
+} v2;
+
 typedef struct v3 {
     float x;
     float y;
