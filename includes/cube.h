@@ -23,6 +23,6 @@
 #define XPOS (4)
 #define YSPEED (1.5)
 #define ZSPEED (2)
-#define RSPEED (5)
+#define RSPEED (8)
 
 #endif // _CUBE
