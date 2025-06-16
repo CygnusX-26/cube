@@ -212,7 +212,7 @@ int main() {
         free(modelMat);
         modelMat = NULL;
         refresh();
-        napms(1.0 / FPS);
+        napms(1.0 / FPS * 50);
         // if (rad >= 6.2831852) {
         //     rad = 0;
         // }

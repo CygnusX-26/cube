@@ -18,11 +18,11 @@
 #define ASPECT (0.5)
 #define GRADLEN (69)
 
-#define FPS (60)
+#define FPS (30)
 #define YPOS (1.7)
 #define XPOS (4)
 #define YSPEED (1.5)
 #define ZSPEED (2)
-#define RSPEED (1)
+#define RSPEED (5)
 
 #endif // _CUBE
